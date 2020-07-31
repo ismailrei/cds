@@ -30,7 +30,6 @@ import (
 	"github.com/ovh/cds/engine/api/authentication/local"
 	"github.com/ovh/cds/engine/api/bootstrap"
 	"github.com/ovh/cds/engine/api/broadcast"
-	"github.com/ovh/cds/engine/cache"
 	"github.com/ovh/cds/engine/api/database/gorpmapping"
 	"github.com/ovh/cds/engine/api/event"
 	"github.com/ovh/cds/engine/api/integration"
@@ -46,6 +45,7 @@ import (
 	"github.com/ovh/cds/engine/api/worker"
 	"github.com/ovh/cds/engine/api/workermodel"
 	"github.com/ovh/cds/engine/api/workflow"
+	"github.com/ovh/cds/engine/cache"
 	"github.com/ovh/cds/engine/database"
 	"github.com/ovh/cds/engine/featureflipping"
 	"github.com/ovh/cds/engine/gorpmapper"
@@ -649,6 +649,9 @@ func (a *API) Serve(ctx context.Context) error {
 	}, a.PanicDump())
 	sdk.GoRoutine(ctx, "authentication.SessionCleaner", func(ctx context.Context) {
 		authentication.SessionCleaner(ctx, a.mustDB, 10*time.Second)
+	}, a.PanicDump())
+	sdk.GoRoutine(ctx, "api.WorkflowRunCraft", func(ctx context.Context) {
+		a.WorkflowRunCraft(ctx, 100*time.Millisecond)
 	}, a.PanicDump())
 
 	migrate.Add(ctx, sdk.Migration{Name: "RunsSecrets", Release: "0.47.0", Blocker: false, Automatic: true, ExecFunc: func(ctx context.Context) error {
